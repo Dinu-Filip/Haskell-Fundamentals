@@ -21,3 +21,5 @@ I aim to include material for the following
 - IO in Haskell
 - Metaprogramming in Haskell
 - Concurrency in Haskell
+
+Contents is based on and an extension of the material covered in the first year of the Computing degree at Imperial College London
