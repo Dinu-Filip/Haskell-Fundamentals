@@ -22,4 +22,4 @@ I aim to include material for the following
 - Metaprogramming in Haskell
 - Concurrency in Haskell
 
-Contents is based on and an extension of the material covered in the first year of the Computing degree at Imperial College London
+Based on (and an extension of) the Haskell course in Year 1 of the Computing degree at Imperial College London
