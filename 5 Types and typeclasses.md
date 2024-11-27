@@ -1,5 +1,20 @@
-# Table of contents
-[TOC]
+# Contents
+- [Creating data types](#creating-data-types)
+  - [Enumeration](#enumeration)
+  - [Algebraic data types](#algebraic-data-types)
+  - [Pattern matching](#pattern-matching)
+  - [Record syntax](#record-syntax)
+  - [Polymorphic data types](polymorphic-data-types)
+  - [Recursive data types](#recursive-data-types)
+  - [Two useful ADTs](#two-useful-adts)
+- [Typeclasses](#typeclasses)
+  - [Derived instances](#derived-instances)
+  - [Important typeclasses](#important-typeclasses)
+- [Advanced topics](#advanced-topics)
+  - [Generic algebraic data types](#gadts)
+  - [Existentially quantified types](existentially-quantified-types)
+  - [Kinds](#kinds)
+
 # Creating data types
 ## Enumeration
 Like in many other programming language, Haskell allows the definition of an **enumeration type**. Enumerated types introduce a new type and an associated set of elements, known as **value constructors**, of that type, for example
@@ -299,7 +314,8 @@ class Ord a => Num a where
 Used for numerical types.
 
 # Advanced topics
-## Generic algebraic data types (GADTs)
+
+## Generic algebraic data types
 A **generic algebraic data type (GADT)** extends the functionality of other algebraic data types by providing type signatures for the value constructors. For example, suppose we define an `Expr` type for representing arithmetic expressions
 
 ```Haskell
