@@ -74,10 +74,10 @@ buildArgAssignments ids idMap = map (\id -> Assign (lookUp id idMap) (Var id)) i
 renameExp :: Exp -> IdMap -> Exp
 -- Pre: A precondition is that every variable referenced in 
 -- the expression is in the idMap. 
-renameExp (Var id) idMap = Var (lookUp id idMap)
+renameExp (Var id) idMap             = Var (lookUp id idMap)
 renameExp (Apply op exp1 exp2) idMap = Apply op (renameExp exp1 idMap) 
                                                 (renameExp exp2 idMap)
-renameExp exp _ = exp
+renameExp exp _                      = exp
 
 renameStatement :: Statement -> IdMap -> Statement
 renameStatement (Assign id exp) idMap = Assign (lookUp id idMap) 
