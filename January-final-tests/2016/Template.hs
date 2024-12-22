@@ -58,7 +58,7 @@ safeLookup a ((k, v) : xs)
 getAttribute :: String -> XML -> String
 getAttribute _ Null             = ""
 getAttribute _ (Text _)         = ""
-getAttribute a (Element _ as _) = safeLookup a as
+getAttribute a (Element _ as _) = fromMaybe "" (lookup a as)
 
 getChildren :: String -> XML -> [XML]
 getChildren name (Element _ _ xs) = filter checkChild xs
@@ -171,14 +171,6 @@ expandXSL xsl source
 
 type XPath = String
 
--- Recursively retrieves text in all child element
-getAllText :: XML -> XML
-getAllText xml = Text (go xml)
-    where go :: XML -> String
-          go (Text t)         = t
-          go (Element _ _ es) = concatMap go es
-          go _                = ""
-
 getContext :: XPath -> XML -> [XML]
 -- Returns XML in current context
 getContext "" xml = [xml]
@@ -198,14 +190,13 @@ expandXSL' :: Context -> XSL -> [XML]
 -- If value-of, then get all text (?) only from first element in path
 expandXSL' ctx (Element "value-of" attrs _)
     | null newCtx   = [Text ""]
-    | otherwise     = [getAllText $ head newCtx]
+    | otherwise     = [getValue $ head newCtx]
         where newCtx = getContext ('/' : safeLookup "select" attrs) ctx
 -- Every child element must be passed with each context
 expandXSL' ctx (Element "for-each" attrs es) = concat [expandXSL' ctx' e | ctx' <- newCtx, e <- es]
     where newCtx = getContext ('/' : safeLookup "select" attrs) ctx
 expandXSL' ctx (Element name attrs es) = [Element name attrs (concatMap (expandXSL' ctx) es)]
 expandXSL' ctx xsl = [xsl]
-
 
 -------------------------------------------------------------------------
 -- Test data for Parts I and II
