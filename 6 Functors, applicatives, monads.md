@@ -53,9 +53,9 @@ For example, the expression `fmap (*2)` is a function that takes a functor $t$  
 ## Functor laws
 Functors must obey some laws
 
-<center> <strong>First functor law:</strong> <code>fmap id = id</code> </center>
+<p align="center"><strong>First functor law:</strong> <code>fmap id = id</code> </p>
 
-<center> <strong>Second functor law:</strong> for any functor <code>F</code>, <code>fmap (f . g) F = fmap f (fmap g F)</code> </center>
+<p align="center"> <strong>Second functor law:</strong> for any functor <code>F</code>, <code>fmap (f . g) F = fmap f (fmap g F)</code> </p>
 
 These laws are not enforced in Haskell, but it is a very strong convention to ensure that any functors obey these laws, as it gives us some guarantees about their behaviour.
 
@@ -202,13 +202,13 @@ is equivalent to the mathematical expression
 Like functors, applicatives should obey thing laws to ensure they behave as expected
 
 
-<center> <strong>First applicative law:</strong> <code> pure id &lt;*&gt; v = v</code> </center>
+<p align="center"> <strong>First applicative law:</strong> <code> pure id &lt;*&gt; v = v</code> </p>
 
-<center> <strong>Second applicative law:</strong> <code> pure f &lt;*&gt; pure x = pure (f x)</code> </center>
+<p align="center"> <strong>Second applicative law:</strong> <code> pure f &lt;*&gt; pure x = pure (f x)</code> </p>
 
-<center> <strong>Third applicative law:</strong> <code> u &lt;*&gt; pure y = pure ($ y) &lt;*&gt; u</code> </center>
+<p align="center"> <strong>Third applicative law:</strong> <code> u &lt;*&gt; pure y = pure ($ y) &lt;*&gt; u</code> </p>
 
-<center> <strong>Fourth applicative law:</strong> <code> pure (.) &lt;*&gt; u &lt;*&gt; v &lt;*&gt; w = u &lt;*&gt; (v &lt;*&gt; w)</code> </center>
+<p align="center"> <strong>Fourth applicative law:</strong> <code> pure (.) &lt;*&gt; u &lt;*&gt; v &lt;*&gt; w = u &lt;*&gt; (v &lt;*&gt; w)</code> </p>
 
 The first law ensures that `pure id` does nothing (just like the `id` function by itself). 
 The second law ensures that `pure` preserves function application; applying a pure function to a pure value is the same as applying the function directly to the value and then using `pure`.
@@ -371,11 +371,11 @@ instance Monad ((->) x) where
 The monad instance for `x ->` can be used to combine a unary function and binary function to create a new unary function in situations where the same parameter needs to be passed to multiple functions. For example, `(*2) >>= (+)` is equivalent to the expression `(x * 2) + x` (a weird way of multiplying by 3). 
 ## Monad laws
 
-<center> <strong>First monad law:</strong> <code> pure x &gt;&gt;= f = f x</code> </center>
+<p align="center"> <strong>First monad law:</strong> <code> pure x &gt;&gt;= f = f x</code> </p>
 
-<center> <strong>Second monad law:</strong> <code> mx &gt;&gt;= pure = mx</code> </center>
+<p align="center"> <strong>Second monad law:</strong> <code> mx &gt;&gt;= pure = mx</code> </p>
 
-<center> <strong>Third monad law:</strong> <code> (mx &gt;&gt;= f) &gt;&gt;= g = mx &gt;&gt;= (\x -&gt; f x &gt;&gt;= g)</code> </center>
+<p align="center"> <strong>Third monad law:</strong> <code> (mx &gt;&gt;= f) &gt;&gt;= g = mx &gt;&gt;= (\x -&gt; f x &gt;&gt;= g)</code> </p>
 ## Comparing functors, applicatives and monads
 Using the flipped version of bind `(=<<) = flip (>>=)`, we can clearly see the relationship between functors, applicatives and monads
 
