@@ -137,12 +137,10 @@ getFrontier :: State -> Automaton -> [Transition]
 getFrontier t a
   | t `elem` terminalStates a = [(t, t, Eps)]
   | otherwise                 = do 
-                                  ts@(_, s, l) <- nextTransitions
+                                  ts@(_, s, l) <- transitionsFrom t a
                                   case l of
                                     Eps -> getFrontier s a
                                     _   -> pure ts
-
-  where nextTransitions = transitionsFrom t a
 
 groupTransitions :: [Transition] -> [(Label, [State])]
 groupTransitions ts = [(l', nub [s | (_, s, l) <- ts, l' == l]) 
