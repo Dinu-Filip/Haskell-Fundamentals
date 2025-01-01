@@ -154,20 +154,21 @@ inferPolyType e = let (_, t, _) = inferPolyType' e [] 1 in t
 --   = undefined
 
 inferPolyType' :: Expr -> TEnv -> Int -> (Sub, Type, Int)
-inferPolyType' (Number _) _ n = ([], TInt, n)
-inferPolyType' (Id s) tEnv n  = ([], lookUp s tEnv, n)
+inferPolyType' (Number _) _ n  = ([], TInt, n)
+inferPolyType' (Id s) tEnv n   = ([], lookUp s tEnv, n)
 inferPolyType' (Boolean _) _ n = ([], TBool, n)
-inferPolyType' (Prim s) _ n = ([], lookUp s primTypes, n)
+inferPolyType' (Prim s) _ n    = ([], lookUp s primTypes, n)
 inferPolyType' (Fun x e) tEnv n
-  | te == TErr = (s, TErr, m)
-  | otherwise  = (s, TFun a' te, m)
+  | te == TErr                 = (s, TErr, m)
+  | otherwise                  = (s, TFun a' te, m)
+  
   where a = TVar ("a" ++ show n)
         tEnv' = (x, a) : tEnv
         (s, te, m) = inferPolyType' e tEnv' (n + 1)
         a' = applySub s a
 inferPolyType' (App f e) tEnv n
-  | isNothing uft = ([], TErr, n)
-  | otherwise     = (s', a', k + 1)
+  | isNothing uft              = ([], TErr, n)
+  | otherwise                  = (s', a', k + 1)
 
   where (fs, tf, m) = inferPolyType' f tEnv n
         tEnv' = updateTEnv tEnv fs
@@ -177,9 +178,9 @@ inferPolyType' (App f e) tEnv n
         s' = combineSubs [fromJust uft, es, fs]
         a' = applySub (fromJust uft) a
 inferPolyType' (Cond c e1 e2) tEnv n
-  | tc /= TBool                    = ([], TErr, n)
-  | isNothing uft                  = ([], TErr, n)
-  | otherwise                      = (s', applySub s' te1, l)
+  | tc /= TBool                = ([], TErr, n)
+  | isNothing uft              = ([], TErr, n)
+  | otherwise                  = (s', applySub s' te1, l)
 
   where (cs, tc, m) = inferPolyType' c tEnv n
         tEnv' = updateTEnv tEnv cs
