@@ -174,9 +174,21 @@ inferPolyType' (App f e) tEnv n
         (es, te, k) = inferPolyType' e tEnv' m
         a = TVar ("a" ++ show k)
         uft = unify tf (TFun te a)
-        s' = combineSubs [fromJust uft, fs, es]
-        a' = applySub s' a
+        s' = combineSubs [fromJust uft, es, fs]
+        a' = applySub (fromJust uft) a
+inferPolyType' (Cond c e1 e2) tEnv n
+  | tc /= TBool                    = ([], TErr, n)
+  | isNothing uft                  = ([], TErr, n)
+  | otherwise                      = (s', applySub s' te1, l)
 
+  where (cs, tc, m) = inferPolyType' c tEnv n
+        tEnv' = updateTEnv tEnv cs
+        (e1s, te1, k) = inferPolyType' e1 tEnv m
+        tEnv'' = updateTEnv tEnv' e1s
+        (e2s, te2, l) = inferPolyType' e2 tEnv' k
+        tEnv''' = updateTEnv tEnv'' e2s
+        uft = unify te1 te2
+        s' = combineSubs [fromJust uft, e2s, e1s, cs]
 
 
 ------------------------------------------------------
