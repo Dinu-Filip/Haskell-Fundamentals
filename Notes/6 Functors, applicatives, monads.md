@@ -1,6 +1,6 @@
 # Functors
 ## Definition
-The `Functor` typeclass describes types whose contents can be mapped over while preserving their structure. Its general form is as follows
+The `Functor` typeclass describes types whose contents can be mapped over while preserving their structure. Its general definition is as follows
 ```Haskell
 class Functor (t :: * -> *) where
     fmap :: (a -> b) -> t a -> t b
@@ -53,9 +53,9 @@ For example, the expression `fmap (*2)` is a function that takes a functor $t$  
 ## Functor laws
 Functors must obey some laws
 
-<center> <strong>First functor law:</strong> <code>fmap id = id</code> </center>
+<p align="center"> <strong>First functor law:</strong> <code>fmap id = id</code> </p>
 
-<center> <strong>Second functor law:</strong> for any functor <code>F</code>, <code>fmap (f . g) F = fmap f (fmap g F)</code> </center>
+<p align="center"> <strong>Second functor law:</strong> for any functor <code>F</code>, <code>fmap (f . g) F = fmap f (fmap g F)</code> </p>
 
 These laws are not enforced in Haskell, but it is a very strong convention to ensure that any functors obey these laws, as it gives us some guarantees about their behaviour.
 
@@ -202,15 +202,15 @@ is equivalent to the mathematical expression
 Like functors, applicatives should obey thing laws to ensure they behave as expected
 
 
-<center> <strong>First applicative law:</strong> <code> pure id &lt;*&gt; v = v</code> </center>
+<p align="center"> <strong>First applicative law:</strong> <code> pure id &lt;*&gt; v = v</code> </p>
 
-<center> <strong>Second applicative law:</strong> <code> pure f &lt;*&gt; pure x = pure (f x)</code> </center>
+<p align="center"> <strong>Second applicative law:</strong> <code> pure f &lt;*&gt; pure x = pure (f x)</code> </p>
 
-<center> <strong>Third applicative law:</strong> <code> u &lt;*&gt; pure y = pure ($ y) &lt;*&gt; u</code> </center>
+<p align="center"> <strong>Third applicative law:</strong> <code> u &lt;*&gt; pure y = pure ($ y) &lt;*&gt; u</code> </p>
 
-<center> <strong>Fourth applicative law:</strong> <code> pure (.) &lt;*&gt; u &lt;*&gt; v &lt;*&gt; w = u &lt;*&gt; (v &lt;*&gt; w)</code> </center>
+<p align="center"> <strong>Fourth applicative law:</strong> <code> pure (.) &lt;*&gt; u &lt;*&gt; v &lt;*&gt; w = u &lt;*&gt; (v &lt;*&gt; w)</code> </p>
 
-The first law ensures that `pure id` does nothing (just like the `id` function by itself). 
+The first law ensures that `pure id` does nothing (just like the `id` function by itself).
 The second law ensures that `pure` preserves function application; applying a pure function to a pure value is the same as applying the function directly to the value and then using `pure`.
 The third law ensures that applying a **morphism** (function wrapped in an applicative) to a pure value is the same as supplying the value as an argument in a `pure` to the morphism.
 The fourth law ensures that `pure (.)` composes morphisms similar to how `(.)` composes functions.
@@ -440,11 +440,11 @@ spring t = t >>= sprout
 Using the definition of `liftM2`, we can get intuition for how `Bush` is an applicative; `liftA2 f b1 b2` partially applies `f` over every leaf in b1 and then applies the resulting function over `b2`. Since this occurs at every leaf in `b1`, the 'mapped over' b2 is grafted into every leaf of `b1`.
 ## Monad laws
 
-<center> <strong>First monad law:</strong> <code> pure x &gt;&gt;= f = f x</code> </center>
+<p align="center"> <strong>First monad law:</strong> <code> pure x &gt;&gt;= f = f x</code> </p>
 
-<center> <strong>Second monad law:</strong> <code> mx &gt;&gt;= pure = mx</code> </center>
+<p align="center"> <strong>Second monad law:</strong> <code> mx &gt;&gt;= pure = mx</code> </p>
 
-<center> <strong>Third monad law:</strong> <code> (mx &gt;&gt;= f) &gt;&gt;= g = mx &gt;&gt;= (\x -&gt; f x &gt;&gt;= g)</code> </center>
+<p align="center"> <strong>Third monad law:</strong> <code> (mx &gt;&gt;= f) &gt;&gt;= g = mx &gt;&gt;= (\x -&gt; f x &gt;&gt;= g)</code> </p>
 
 The first and second laws state that pure shouldn't have an effect on the structure of the computation. The third law states that bind should be associative, although this is not very clear because of the way that `(>>=)`. To make things easier, we use the `(>=>)` operator
 
@@ -612,8 +612,8 @@ multWithLog x y = do
         b <- logNumber y
         tell ["Finished"]
         return (a * b)
-    ```
-    so `runWriter (multWithLog 3 5)` will output `(15, ["3", "5", "Finished"])`
+```
+so `runWriter (multWithLog 3 5)` will output `(15, ["3", "5", "Finished"])`
 - `runWriter :: Writer w a -> (a, w)` - unwraps writer computation as `(result, log)` pair
 - `execWriter :: Writer w a -> w` - extracts the output from a writer computation
 
