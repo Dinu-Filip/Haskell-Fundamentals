@@ -32,10 +32,3 @@ type Move = (Peg, Peg)
 hanoi :: Integer -> Peg -> Peg -> Peg -> [Move]
 hanoi 1 a c b = [(a, b)]
 hanoi n a c b = hanoi (n - 1) a b c ++ [(a, b)] ++ hanoi (n - 1) c a b
-
--- Exercise 6
-
-hanoi' :: Integer -> Peg -> Peg -> Peg -> Peg -> [Move]
-hanoi' 1 a b c d = [(a, d)]
-hanoi' n a b c d = hanoi' ((n - 1) `div` 2) a c d b ++ hanoi ((n - 1) - ((n - 1) `div` 2)) a d c ++ [(a, d)]
-                    ++ hanoi ((n - 1) - ((n - 1) `div` 2)) c a d ++ hanoi' ((n - 1) `div` 2) b a c d
