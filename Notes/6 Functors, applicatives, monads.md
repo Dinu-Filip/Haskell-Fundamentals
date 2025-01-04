@@ -1,6 +1,6 @@
 # Functors
 ## Definition
-The `Functor` typeclass describes types whose contents can be mapped over while preserving their structure. Its general form is follows
+The `Functor` typeclass describes types whose contents can be mapped over while preserving their structure. Its general form is as follows
 ```Haskell
 class Functor (t :: * -> *) where
     fmap :: (a -> b) -> t a -> t b
