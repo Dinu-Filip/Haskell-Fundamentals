@@ -1,19 +1,19 @@
-# Contents
+# Table of contents
 - [Creating data types](#creating-data-types)
-  - [Enumeration](#enumeration)
-  - [Algebraic data types](#algebraic-data-types)
-  - [Pattern matching](#pattern-matching)
-  - [Record syntax](#record-syntax)
-  - [Polymorphic data types](polymorphic-data-types)
-  - [Recursive data types](#recursive-data-types)
-  - [Two useful ADTs](#two-useful-adts)
+    - [Enumeration](#enumeration)
+    - [Algebraic data types](#algebraic-data-types)
+        - [Pattern matching](#pattern-matching)
+        - [Record syntax](#record-syntax)
+    - [Polymorphic data types](#polymorphic-data-types)
+    - [Recursive data types](#recursive-data-types)
+    - [Two useful ADTs](#two-useful-adts)
 - [Typeclasses](#typeclasses)
-  - [Derived instances](#derived-instances)
-  - [Important typeclasses](#important-typeclasses)
+    - [Derived instances](#derived-instances)
+    - [Important typeclasses](#important-typeclasses)
 - [Advanced topics](#advanced-topics)
-  - [Generic algebraic data types](#gadts)
-  - [Existentially quantified types](existentially-quantified-types)
-  - [Kinds](#kinds)
+    - [Generic algebraic data types (GADTs)](#gadts)
+    - [Existentially quantified types](existentially-quantified-types)
+    - [Kinds](#kinds)
 
 # Creating data types
 ## Enumeration
@@ -36,7 +36,7 @@ bothOn Off Off = False
 ```
 
 ## Algebraic data types
-Enumerations are only a special case of Haskell's more general **algebraic data types**, which has the following general form
+Enumerations are only a special case of Haskell's more general **algebraic data types**, which have the following general form
 ```
 data AlgDataType = Constr1 Type11 Type12 ... Type 1i
                  | Constr2 Type21 Type22 ... Type 2j
@@ -150,6 +150,60 @@ data [a] = [] | a : [a]
 ```
 
 although **this is not correct syntax**; lists are implemented in a different way under the hood.
+
+## Newtypes
+
+^531657
+
+Declaring types using `data` has a runtime cost associated, for example when pattern matching. For certain use-cases, we can use newtypes instead, which do not have any runtime representation. Newtypes must satisfy the following two properties
+- Newtypes must have exactly one constructor
+- That one constructor must have exactly one argument
+
+Because newtypes hold only one value, they can derive essentially any typeclass, as long as that underlying value is an instance of the typeclass. For example
+
+```Haskell
+newtype Radians = Radians Double deriving (Eq, Ord, Num, Fractional, Floating)
+```
+Crucially, unlike `type`, newtypes are not simply type aliases; newtypes cannot be interchanged even if they wrap around the same underlying type.
+
+However, since newtypes do not have a runtime representation, they are not lazy in the same way as user-defined data types. For example, if we have
+```Haskell
+data Foo = Foo Int
+newtype Bar = Bar Int
+
+foo !(Foo _) = ()
+bar !(Bar _) = ()
+```
+
+calling `foo (Foo undefined)` will not crash as `undefined` is not evaluated, whereas `bar (Bar undefined)` will crash since the evaluate of `undefined` is forced at runtime.
+
+Newtypes also allow us to make multiple typeclass instances for the same type, particularly where there are multiple choices for how a type can be implemented. Consider for example the monoid and semigroup of the integers; we are forced to choose between implementing addition, multiplication for `Int` as `<>`. We can wrap `Int` in two different newtypes and providing different `Monoid` and `Semigroup` instances for each.
+
+```Haskell
+newtype Plus = Plus Int deriving Show
+newtype Times = Times Int deriving Show
+
+instance Semigroup Plus where
+    Plus m <> Plus n = Plus (m + n)
+instance Monoid Plus where
+    mempty = Plus 0
+
+instance Semigroup Times where
+    Times m <> Times n = Times (m * n)
+instance Monoid Time where
+    mempty = Times 1
+```
+
+One nice example of a newtype is `Down a`, which is included in `Data.Ord`
+```Haskell
+newtype Down a = Down a deriving (Eq, Show)
+
+instance Ord a => Ord (Down a) where
+    compare (Down x) (Down y) = compare y x
+```
+
+so the `Ord` instance of `Down` is used to compare two values in reverse order. This allows us to elegantly sort a list in reverse order
+`sortOn Down [4, 2, 5, 8, 3] = [8, 5, 4, 3, 2]`
 
 ## Two useful ADTs
 ### `Maybe`
@@ -314,8 +368,7 @@ class Ord a => Num a where
 Used for numerical types.
 
 # Advanced topics
-
-## Generic algebraic data types
+## Generic algebraic data types (GADTs)
 A **generic algebraic data type (GADT)** extends the functionality of other algebraic data types by providing type signatures for the value constructors. For example, suppose we define an `Expr` type for representing arithmetic expressions
 
 ```Haskell
@@ -418,3 +471,5 @@ we can think of it as a value with type `Int` and `Double` and `Float` etc.
 
 ## Kinds
 A **kind** is the type of a type constructor. For example, we `Int` has kind `*`. A single `*` indicates that the type is a concrete type; it doesn't take any type parameters. `Maybe` has type `* -> *` since it takes a concrete type like `String` and returns `Maybe String`. `Either` has kind `* -> * -> *` and so on.
+
+research DataKinds
