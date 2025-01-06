@@ -56,8 +56,10 @@ simplify :: RE -> RE
 simplify (Seq re1 re2) = Seq (simplify re1) (simplify re2)
 simplify (Alt re1 re2) = Alt (simplify re1) (simplify re2)
 simplify (Rep re)      = Rep (simplify re)
+-- simplify (Seq re (Rep re))
 simplify (Plus re)     = Seq re' (Rep re')
   where re' = simplify re
+-- simplify simplify (Alt re Null)
 simplify (Opt re)      = Alt (simplify re) Null
 simplify re            = re
 
@@ -80,6 +82,8 @@ transitionsFrom :: State -> Automaton -> [Transition]
 transitionsFrom s a = filter (\(s', _, _) -> s == s') (transitions a)
 
 labels :: [Transition] -> [Label]
+-- can write instead nub $ [l | (_, _ C l) <- ts] to automatically pattern match
+-- on label
 labels ts = nub $ [l | (_, _, l) <- ts, l /= Eps]
 
 accepts :: Automaton -> String -> Bool
