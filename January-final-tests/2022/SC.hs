@@ -74,7 +74,7 @@ buildFVMap (Let bs e)
 buildFVMap _          = []
 
 modifyBinding :: [(Id, [Id])] -> Binding -> Binding
-modifyBinding fVars (f, Fun as e) = ('$' : f, Fun ((lookUp f fVars) ++ as) 
+modifyBinding fVars (f, Fun as e) = ('$' : f, Fun (lookUp f fVars ++ as) 
                                                   (modifyFunctions fVars e))
 modifyBinding fVars (v, e)        = (v, modifyFunctions fVars e)
 
@@ -100,11 +100,20 @@ lift :: Exp -> Exp
 lift e = Let scs e'
   where (e', scs) = lift' e
 
+liftBinding :: Binding -> (Exp, [Supercombinator])
+liftBinding (id, e) = lift' e
+
 -- You may wish to use this...
 lift' :: Exp -> (Exp, [Supercombinator])
 lift' (Let bs e)
-  | null vs = (e', fs ++ scs)
-  | otherwise = (Let vs e', fs ++ scs)
+  | null vs = (e', concat fScs ++ concat vScs ++ expScs)
+  | otherwise = (Let (zip vIds vs') e', concat fScs ++ concat vScs ++ expScs)
   where (fs, vs) = splitDefs bs
-        (e', scs) = lift' e
+        (e', expScs) = lift' e
+        (_, fScs) = unzip (map (lift' . snd) fs)
+        (vs', vScs) = unzip (map (lift' . snd) vs)
+        vIds = map fst vs
+
+
+
 lift' e = (e, [])
