@@ -27,7 +27,8 @@ split3 xs = [(x, y', z') | (x, z) <- split2 xs, (y', z') <- ([], z) : split2 z]
 uninsert :: [a] -> [([a], [a])]
 -- Filter only triples with non-empty middle element representing sublist
 -- to be inserted
-uninsert xs = map (\(x, y, z) -> (y, x ++ z)) (filter (\(a, b, c) -> not $ null b) (split3 xs))
+uninsert xs = map (\(x, y, z) -> (y, x ++ z)) 
+                  (filter (\(a, b, c) -> not $ null b) (split3 xs))
 
 split2M :: [a] -> [([a], [a])]
 split2M xs
@@ -51,12 +52,16 @@ matches :: String -> ParseTree -> Bool
 matches s (Synonym s')        = s `elem` synonyms s'
 matches s (Anagram _ s')      = sort s == sort s'
 matches s (Reversal _ t)      = matches (reverse s) t
-matches s (Insertion _ t1 t2) = or [matches s1 t1 && matches s2 t2 | (s1, s2) <- uninsert s]
-matches s (Charade _ t1 t2)   = or [matches s1 t1 && matches s2 t2 | (s1, s2) <- split2 s]
+matches s (Insertion _ t1 t2) 
+  = or [matches s1 t1 && matches s2 t2 | (s1, s2) <- uninsert s]
+matches s (Charade _ t1 t2)   
+  = or [matches s1 t1 && matches s2 t2 | (s1, s2) <- split2 s]
 -- Length of hidden word less than outer word and tail of prefixes is sufficient
 -- to ensure hidden word not matches to beginning of outer word
 matches s (HiddenWord _ s')   = (length s' > length s) && 
-                                any (isPrefix s) (tail (filter ((> length s) . length) (tails s')))
+                                any (isPrefix s) 
+                                    (tail (filter ((> length s) . length) 
+                                    (tails s')))
 
 evaluate :: Parse -> Int -> [String]
 evaluate (def, _, t) n = filter (`matches` t) syns'
@@ -80,7 +85,11 @@ parseSynonym :: [String] -> [ParseTree]
 parseSynonym xs = let t = unwords xs in [Synonym t | not $ null $ synonyms t]
 
 -- Parses constructions with one argument
-parse1Arg :: [String] -> Indicator -> ([String] -> [a]) -> (Indicator -> a -> ParseTree) -> [ParseTree]
+parse1Arg :: [String] 
+          -> Indicator 
+          -> ([String] -> [a]) 
+          -> (Indicator -> a -> ParseTree) 
+          -> [ParseTree]
 parse1Arg xs indList fArg ptConstructor = [ptConstructor [unwords ind] t |
                                            (ind, arg) <- split2M xs,
                                            unwords ind `elem` indList,
@@ -95,19 +104,28 @@ parseReversal xs = parse1Arg xs reversalIndicators parseWordplay Reversal
 parseHidden :: [String] -> [ParseTree]
 parseHidden xs = parse1Arg xs hiddenWordIndicators ((: []) . concat) HiddenWord
 
-parse2Args :: [String] -> Indicator -> Indicator -> (Indicator -> ParseTree -> ParseTree -> ParseTree) -> [ParseTree]
-parse2Args xs inds1 inds2 ptConstructor = [ptConstructor ind t1 t2 | (arg, ind, arg') <- splits1 ++ splits2,
-                                                                     t1 <- parseWordplay arg,
-                                                                     t2 <- parseWordplay arg']
+parse2Args :: [String] 
+           -> Indicator 
+           -> Indicator 
+           -> (Indicator -> ParseTree -> ParseTree -> ParseTree) 
+           -> [ParseTree]
+parse2Args xs inds1 inds2 ptConstructor 
+  = [ptConstructor ind t1 t2 | (arg, ind, arg') <- splits1 ++ splits2,
+                               t1 <- parseWordplay arg,
+                               t2 <- parseWordplay arg']
 
   where frags = split3 xs
         splits1 = filter (\(_, ind, _) -> unwords ind `elem` inds1) frags
         -- First and last arguments switched according to rules for insertion
         -- and charade
-        splits2 = [(a2, ind, a1) | (a1, ind, a2) <- frags, unwords ind `elem` inds2]
+        splits2 = [(a2, ind, a1) | (a1, ind, a2) <- frags, 
+                                   unwords ind `elem` inds2]
 
 parseInsertion :: [String] -> [ParseTree]
-parseInsertion xs = parse2Args xs insertionIndicators envelopeIndicators Insertion
+parseInsertion xs = parse2Args xs 
+                               insertionIndicators 
+                               envelopeIndicators 
+                               Insertion
 
 parseCharade :: [String] -> [ParseTree]
 parseCharade xs = parse2Args xs beforeIndicators afterIndicators Charade

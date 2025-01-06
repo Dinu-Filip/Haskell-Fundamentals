@@ -1,5 +1,6 @@
 module Exam where
 
+
 import Data.Char
 import Data.Maybe
 import Data.List
@@ -159,7 +160,7 @@ type XSL = XML
 --   output "out.html" filmsXSL films
 -- To render output.html in a browser, type this at the Linux prompt:
 --   firefox output.html &
-output :: String -> XML -> XML -> IO()
+output :: String -> XML -> XML -> IO ()
 output file xsl source
   = writeFile file (showXMLs (expandXSL xsl source))
 
