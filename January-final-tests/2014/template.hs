@@ -1,6 +1,6 @@
+module Exams where
 import Data.Maybe
 import Data.List
-
 data RE = Null   |
           Term Char |
           Seq RE RE |
@@ -55,28 +55,26 @@ lookUp x = fromJust . lookup x
 simplify :: RE -> RE
 simplify (Seq re1 re2) = Seq (simplify re1) (simplify re2)
 simplify (Alt re1 re2) = Alt (simplify re1) (simplify re2)
-simplify (Rep re) = Rep (simplify re)
-simplify (Plus re) = Seq re' (Rep re')
+simplify (Rep re)      = Rep (simplify re)
+simplify (Plus re)     = Seq re' (Rep re')
   where re' = simplify re
-simplify (Opt re) = Alt (simplify re) Null
-simplify re = re
+simplify (Opt re)      = Alt (simplify re) Null
+simplify re            = re
 
 --------------------------------------------------------
 -- Part II
 
 startState :: Automaton -> State
-startState (s, _, _)
-  = s
+startState (s, _, _) = s
+
 terminalStates :: Automaton -> [State]
-terminalStates (_, tss, _)
-  = tss
+terminalStates (_, tss, _) = tss
+
 transitions :: Automaton -> [Transition]
-transitions (_, _, ts)
-  = ts
+transitions (_, _, ts) = ts
 
 isTerminal :: State -> Automaton -> Bool
-isTerminal s a
-  = s `elem` terminalStates a
+isTerminal s a = s `elem` terminalStates a
 
 transitionsFrom :: State -> Automaton -> [Transition]
 transitionsFrom s a = filter (\(s', _, _) -> s == s') (transitions a)
@@ -93,10 +91,9 @@ accepts a s = accepts' (startState a) s
 
         try :: String -> Transition -> Bool
         try cs (_, t, Eps) = accepts' t cs
-        try "" _           = False
         try (c : cs) (_, t, C c')
-          | c == c'   = accepts' t cs
-          | otherwise = False
+          | c == c'        = accepts' t cs
+        try _ _            = False
           
 
 --------------------------------------------------------
@@ -109,17 +106,20 @@ makeNDA re
     (transitions, k) = make (simplify re) 1 2 3
 
 make :: RE -> Int -> Int -> Int -> ([Transition], Int)
-make Null m n k = ([(m, n, Eps)], k)
-make (Term c) m n k = ([(m, n, C c)], k)
+make Null m n k        = ([(m, n, Eps)], k)
+make (Term c) m n k    = ([(m, n, C c)], k)
 make (Seq r1 r2) m n k = (ts1 ++ [(k, k + 1, Eps)] ++ ts2, k2)
+
   where (ts1, k1) = make r1 m k (k + 2)
         (ts2, k2) = make r2 (k + 1) n k1
 make (Alt r1 r2) m n k = ((m, k, Eps) : (m, k + 2, Eps) :
                            ts1 ++ ts2 ++ [(k + 1, n, Eps), (k + 3, n, Eps)], k2)
+
   where (ts1, k1) = make r1 k (k + 1) (k + 4)
         (ts2, k2) = make r2 (k + 2) (k + 3) k1
-make (Rep r) m n k = ((m, k, Eps) : (k + 1, k, Eps) : (k + 1, n, Eps) : 
-                      (m, n, Eps) : ts, k')
+make (Rep r) m n k     = ((m, k, Eps) : (k + 1, k, Eps) : (k + 1, n, Eps) : 
+                         (m, n, Eps) : ts, k')
+
   where (ts, k') = make r k (k + 1) (k + 2)
 --------------------------------------------------------
 -- Part IV
@@ -136,11 +136,12 @@ type MetaTransition = (MetaState, MetaState, Label)
 getFrontier :: State -> Automaton -> [Transition]
 getFrontier t a
   | t `elem` terminalStates a = [(t, t, Eps)]
-  | otherwise                 = do 
-                                  ts@(_, s, l) <- transitionsFrom t a
-                                  case l of
-                                    Eps -> getFrontier s a
-                                    _   -> pure ts
+  | otherwise                 
+    = do 
+        ts@(_, s, l) <- transitionsFrom t a
+        case l of
+          Eps -> getFrontier s a
+          _   -> pure ts
 
 groupTransitions :: [Transition] -> [(Label, [State])]
 groupTransitions ts = [(l', nub [s | (_, s, l) <- ts, l' == l]) 
@@ -148,21 +149,21 @@ groupTransitions ts = [(l', nub [s | (_, s, l) <- ts, l' == l])
 
 makeDA :: Automaton -> Automaton
 -- Pre: Any cycle in the NDA must include at least one non-Eps transition
-makeDA a@(start, _, _) = (rDA, termsDA, tsDA)
+makeDA a@(start, [term], _) = (rDA, termsDA, tsDA)
                       
   where
     (rDA', ms, mts) = makeDA' [start] [] []
     newStates = reverse ms `zip` [1..]
+    termMStates = filter (term `elem`) ms
     rDA = lookUp rDA' newStates
-    sDA = map (`lookUp` newStates) ms
     tsDA = [(lookUp m1 newStates, lookUp m2 newStates, l) | (m1, m2, l) <- mts]
     -- Any term at start of transition that doesn't loop back isn't terminal
-    nonTerms = [s1 | (s1, s2, _) <- tsDA, s1 /= s2]
-    -- Every state is either terminal or not
-    termsDA = sDA \\ nonTerms
+    termsDA = map (`lookUp` newStates) termMStates
 
-    makeDA' :: [State] -> [MetaState] -> [MetaTransition] 
-      -> (MetaState, [MetaState], [MetaTransition])
+    makeDA' :: [State] 
+            -> [MetaState] 
+            -> [MetaTransition] 
+            -> (MetaState, [MetaState], [MetaTransition])
     makeDA' starts ms ts
       | m `elem` ms = (m, ms, ts)
       | otherwise = foldl (\(_, ms', ts') (l, gt) -> 
@@ -253,4 +254,83 @@ nda5
 da5
   = (1,[2],[(1,2,C 'd'),(1,3,C 'a'),(2,2,C 'd'),(3,4,C 'b'),
             (4,2,C 'd')])
+
+acceptsTests, makeNDATests, makeDATests :: [(Int, Bool)]
+acceptsTests
+  = [(1,  accepts ndaFigure "" == False),
+     (2,  accepts ndaFigure "c" == True),
+     (3,  accepts ndaFigure "d" == False),
+     (4,  accepts ndaFigure "ac" == True),
+     (5,  accepts ndaFigure "abababc" == True),
+     (6,  accepts nda1 "x1" == True),
+     (7,  accepts nda1 "y" == False),
+     (8,  accepts nda1 "y2" == True),
+     (9,  accepts nda2 "x" == True),
+     (10, accepts nda2 "" == False),
+     (11, accepts nda2 "x'''" == True),
+     (12, accepts nda3 "aaaaa" == False),
+     (13, accepts nda3 "abababacacab" == False),
+     (14, accepts nda3 "ab" == True),
+     (15, accepts nda3 "abc" == True),
+     (16, accepts nda3 "ac" == False),
+     (17, accepts nda4 "" == False),
+     (18, accepts nda4 "a" == True),
+     (19, accepts nda4 "aa" == True),
+     (20, accepts nda4 "aaaaa" == False),
+     (21, accepts nda5 "" == False),
+     (22, accepts nda5 "ababd" == False),
+     (23, accepts nda5 "abd" == True),
+     (24, accepts nda5 "d" == True)]
+
+makeNDATests
+  = [(1,  accepts (makeNDA reFigure) "" == False),
+     (2,  accepts (makeNDA reFigure) "c" == True),
+     (3,  accepts (makeNDA reFigure) "d" == False),
+     (4,  accepts (makeNDA reFigure) "ac" == True),
+     (5,  accepts (makeNDA reFigure) "abababc" == True),
+     (6,  accepts (makeNDA re1) "x1" == True),
+     (7,  accepts (makeNDA re1) "y" == False),
+     (8,  accepts (makeNDA re1) "y2" == True),
+     (9,  accepts (makeNDA re2) "x" == True),
+     (10, accepts (makeNDA re2) "" == False),
+     (11, accepts (makeNDA re2) "x'''" == True),
+     (12, accepts (makeNDA re3) "aaaaa" == False),
+     (13, accepts (makeNDA re3) "abababacacab" == False),
+     (14, accepts (makeNDA re3) "ab" == True),
+     (15, accepts (makeNDA re3) "abc" == True),
+     (16, accepts (makeNDA re3) "ac" == False),
+     (17, accepts (makeNDA re4) "" == False),
+     (18, accepts (makeNDA re4) "a" == True),
+     (19, accepts (makeNDA re4) "aa" == True),
+     (20, accepts (makeNDA re4) "aaaaa" == False),
+     (21, accepts (makeNDA re5) "" == False),
+     (22, accepts (makeNDA re5) "ababd" == False),
+     (23, accepts (makeNDA re5) "abd" == True),
+     (24, accepts (makeNDA re5) "d" == True)]
+
+makeDATests
+  = [(1,  accepts (makeDA ndaFigure) "" == False),
+     (2,  accepts (makeDA ndaFigure) "c" == True),
+     (3,  accepts (makeDA ndaFigure) "d" == False),
+     (4,  accepts (makeDA ndaFigure) "ac" == True),
+     (5,  accepts (makeDA ndaFigure) "abababc" == True),
+     (6,  accepts (makeDA nda1) "x1" == True),
+     (7,  accepts (makeDA nda1) "y" == False),
+     (8,  accepts (makeDA nda1) "y2" == True),
+     (9,  accepts (makeDA nda2) "x" == True),
+     (10, accepts (makeDA nda2) "" == False),
+     (11, accepts (makeDA nda2) "x'''" == True),
+     (12, accepts (makeDA nda3) "aaaaa" == False),
+     (13, accepts (makeDA nda3) "abababacacab" == False),
+     (14, accepts (makeDA nda3) "ab" == True),
+     (15, accepts (makeDA nda3) "abc" == True),
+     (16, accepts (makeDA nda3) "ac" == False),
+     (17, accepts (makeDA nda4) "" == False),
+     (18, accepts (makeDA nda4) "a" == True),
+     (19, accepts (makeDA nda4) "aa" == True),
+     (20, accepts (makeDA nda4) "aaaaa" == False),
+     (21, accepts (makeDA nda5) "" == False),
+     (22, accepts (makeDA nda5) "ababd" == False),
+     (23, accepts (makeDA nda5) "abd" == True),
+     (24, accepts (makeDA nda5) "d" == True)]
 
