@@ -25,12 +25,12 @@ isFun (Fun _ _) = True
 isFun _         = False
 
 splitDefs :: [Binding] -> ([Binding], [Binding])
-splitDefs bs 
-  = foldl (\(func, vars) b@(_, e) -> 
+splitDefs
+  = foldr (\b@(_, e) (func, vars) -> 
               if isFun e 
               then (b : func, vars) 
               else (func, b : vars))
-          ([], []) bs
+          ([], [])
 
 
 topLevelFunctions :: Exp -> Int
@@ -63,14 +63,16 @@ lambdaLift e
 
 buildFVMap :: Exp -> [(Id, [Id])]
 buildFVMap (Let bs e) 
-  = [(f, freeVars) | f <- names, 
-                     let freeVars = sort ((unionAll allFreeVars) \\ names)]
-    ++ nextEs ++ buildFVMap e
+  = [(f, freeVars) | let freeVars = sort (unionAll allFuncFreeVars \\ names),
+                     f <- names]
+    ++ nextFuncVs ++ nextVarVs ++ buildFVMap e
 
-  where (fs, vs) = splitDefs bs
-        (names, defs) = unzip fs
-        allFreeVars = map freeVars defs
-        nextEs = concatMap (\(Fun _ fe) -> buildFVMap fe) defs
+  where (fs, vs)        = splitDefs bs
+        (names, defs)   = unzip fs
+        allFuncFreeVars = map freeVars defs
+        nextFuncVs      = concatMap (\(Fun _ fe) -> buildFVMap fe) defs
+        nextVarVs       = concatMap (buildFVMap . snd) vs
+buildFVMap (App e es) = buildFVMap e ++ concatMap buildFVMap es
 buildFVMap _          = []
 
 modifyBinding :: [(Id, [Id])] -> Binding -> Binding
@@ -100,20 +102,24 @@ lift :: Exp -> Exp
 lift e = Let scs e'
   where (e', scs) = lift' e
 
-liftBinding :: Binding -> (Exp, [Supercombinator])
-liftBinding (id, e) = lift' e
+liftFunctionBind :: Binding -> [Supercombinator]
+liftFunctionBind (id, Fun ids e) = (id, Fun ids e') : scs
+  where (e', scs) = lift' e
+
+liftVarBind :: Binding -> (Binding, [Supercombinator])
+liftVarBind (id, e) = ((id, e'), scs)
+  where (e', scs) = lift' e
 
 -- You may wish to use this...
 lift' :: Exp -> (Exp, [Supercombinator])
 lift' (Let bs e)
-  | null vs = (e', concat fScs ++ concat vScs ++ expScs)
-  | otherwise = (Let (zip vIds vs') e', concat fScs ++ concat vScs ++ expScs)
-  where (fs, vs) = splitDefs bs
+  | null vs   = (e', concat fScs ++ concat vScs ++ expScs)
+  | otherwise = (Let vs' e', concat fScs ++ concat vScs ++ expScs)
+  where (fs, vs)     = splitDefs bs
         (e', expScs) = lift' e
-        (_, fScs) = unzip (map (lift' . snd) fs)
-        (vs', vScs) = unzip (map (lift' . snd) vs)
-        vIds = map fst vs
-
-
-
-lift' e = (e, [])
+        fScs         = map liftFunctionBind fs
+        (vs', vScs)  = unzip (map liftVarBind vs)
+lift' (App e es) = (App e' es', scs ++ concat eScs)
+  where (e', scs)   = lift' e
+        (es', eScs) = unzip (map lift' es)
+lift' e          = (e, [])
